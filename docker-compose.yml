@@ -2,9 +2,10 @@ version: "3"
 
 services:
   namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.3.3-java8
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.3.4-java8
     container_name: namenode
     restart: always
+    hostname: namenode
     ports:
       - 9870:9870
       - 9000:9000
@@ -14,38 +15,58 @@ services:
       - CLUSTER_NAME=test
     env_file:
       - ./hadoop.env
+    networks:
+      host:
+        aliases:
+          - namenode
 
   datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.3.3-java8
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.3.4-java8
     container_name: datanode
     restart: always
     volumes:
       - hadoop_datanode:/hadoop/dfs/data
+    #ports:
+    #  - 9864:9864
     environment:
       SERVICE_PRECONDITION: "namenode:9870"
     env_file:
       - ./hadoop.env
+    hostname: localhost1
+    domainname: jarey.jarey
+    networks:
+      host:
+        aliases:
+          - datanode
   
   resourcemanager:
-    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.3.3-java8
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.3.4-java8
     container_name: resourcemanager
     restart: always
     environment:
       SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
     env_file:
       - ./hadoop.env
+    networks:
+      host:
+        aliases:
+          - resourcemanager
 
   nodemanager1:
-    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.3.3-java8
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.3.4-java8
     container_name: nodemanager
     restart: always
     environment:
       SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
     env_file:
       - ./hadoop.env
+    networks:
+      host:
+        aliases:
+          - nodemanager
   
   historyserver:
-    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.3.3-java8
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.3.4-java8
     container_name: historyserver
     restart: always
     environment:
@@ -54,8 +75,16 @@ services:
       - hadoop_historyserver:/hadoop/yarn/timeline
     env_file:
       - ./hadoop.env
+    networks:
+      host:
+        aliases:
+          - historyserver
   
 volumes:
   hadoop_namenode:
   hadoop_datanode:
   hadoop_historyserver:
+
+networks:
+    host:
+        driver: bridge
